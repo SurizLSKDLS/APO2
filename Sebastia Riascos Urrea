@@ -1,0 +1,152 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+// Clase abstracta FormaGeometrica
+abstract class FormaGeometrica {
+    private String nombre;
+
+    public FormaGeometrica(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public abstract double calcularArea();  // Método abstracto para calcular el área
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    @Override
+    public String toString() {
+        return getNombre() + " - Área: " + calcularArea();
+    }
+
+    // Método abstracto para mostrar los detalles específicos de cada forma
+    public abstract String detalles();
+}
+
+// Clase Circulo que hereda de FormaGeometrica
+class Circulo extends FormaGeometrica {
+    private double radio;
+
+    public Circulo(double radio) {
+        super("Círculo");
+        this.radio = radio;
+    }
+
+    @Override
+    public double calcularArea() {
+        return Math.PI * Math.pow(radio, 2);
+    }
+
+    @Override
+    public String detalles() {
+        return "Círculo (Radio: " + radio + ")";
+    }
+}
+
+// Clase Rectangulo que hereda de FormaGeometrica
+class Rectangulo extends FormaGeometrica {
+    private double largo;
+    private double ancho;
+
+    public Rectangulo(double largo, double ancho) {
+        super("Rectángulo");
+        this.largo = largo;
+        this.ancho = ancho;
+    }
+
+    @Override
+    public double calcularArea() {
+        return largo * ancho;
+    }
+
+    @Override
+    public String detalles() {
+        return "Rectángulo (Largo: " + largo + ", Ancho: " + ancho + ")";
+    }
+}
+
+// Clase principal TiendaFormas para la interfaz gráfica
+public class TiendaFormas extends JFrame {
+    private List<FormaGeometrica> formas = new ArrayList<>();
+    private JTextArea txtListaFormas;
+    private JComboBox<String> cmbTipoForma;
+
+    public TiendaFormas() {
+        setTitle("Tienda de Formas Geométricas");
+        setSize(500, 400);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Panel de entrada de datos
+        JPanel panelEntrada = new JPanel(new GridLayout(2, 2, 5, 5));
+        cmbTipoForma = new JComboBox<>(new String[]{"Círculo", "Rectángulo"});
+        JButton btnAgregar = new JButton("Agregar Forma");
+
+        panelEntrada.add(new JLabel("Tipo de Forma:"));
+        panelEntrada.add(cmbTipoForma);
+        panelEntrada.add(btnAgregar);
+
+        // Área de texto para mostrar las formas y sus áreas
+        txtListaFormas = new JTextArea();
+        txtListaFormas.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(txtListaFormas);
+
+        // Acción del botón Agregar
+        btnAgregar.addActionListener(this::agregarForma);
+
+        // Configuración de los componentes de la interfaz
+        add(panelEntrada, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+    }
+
+    // Método para agregar una forma según el tipo seleccionado con manejo de errores
+    private void agregarForma(ActionEvent e) {
+        String tipoForma = (String) cmbTipoForma.getSelectedItem();
+        FormaGeometrica forma = null;
+
+        try {
+            if ("Círculo".equals(tipoForma)) {
+                double radio = solicitarEntrada("Ingrese el radio del círculo:");
+                if (radio <= 0) throw new IllegalArgumentException("El radio debe ser mayor que cero.");
+                forma = new Circulo(radio);
+            } else if ("Rectángulo".equals(tipoForma)) {
+                double largo = solicitarEntrada("Ingrese el largo del rectángulo:");
+                double ancho = solicitarEntrada("Ingrese el ancho del rectángulo:");
+                if (largo <= 0 || ancho <= 0) throw new IllegalArgumentException("El largo y el ancho deben ser mayores que cero.");
+                forma = new Rectangulo(largo, ancho);
+            }
+
+            if (forma != null) {
+                formas.add(forma);
+                actualizarListaFormas();
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Error: Ingrese un valor numérico válido.", "Error de Entrada", JOptionPane.ERROR_MESSAGE);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Entrada", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Método para solicitar entrada y manejar el valor ingresado
+    private double solicitarEntrada(String mensaje) throws NumberFormatException {
+        String entrada = JOptionPane.showInputDialog(this, mensaje);
+        if (entrada == null) throw new NumberFormatException("No se ingresó ningún valor.");
+        return Double.parseDouble(entrada);
+    }
+
+    // Método para actualizar la lista de formas y mostrar detalles
+    private void actualizarListaFormas() {
+        txtListaFormas.setText("");
+        for (FormaGeometrica forma : formas) {
+            txtListaFormas.append(forma.detalles() + " - Área: " + forma.calcularArea() + "\n");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new TiendaFormas().setVisible(true));
+    }
+}
